@@ -152,6 +152,16 @@
   border: 1px solid #d1d5db;
 }
 
+/* 回答气泡样式 */
+.answerWrap {
+  width: 100%;
+  flex-grow: 1;
+}
+
+.answer {
+  width: 100%;
+}
+
 /* 增加聊天区域样式 */
 .chatContainer {
   width: 100%;

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import LoadingAnim from '../loading-anim'
 import type { FeedbackFunc } from '../type'
 import s from '../style.module.css'
+import styles from './style.module.css'
 import ImageGallery from '../../base/image-gallery'
 import Thought from '../thought'
 import { randomString } from '@/utils/string'
@@ -233,8 +234,8 @@ const Answer: FC<IAnswerProps> = ({
   )
 
   return (
-    <div key={id}>
-      <div className='flex items-start'>
+    <div className={styles.answerContainer}>
+      <div className="flex items-start w-full">
         <div className={`${s.answerIcon} w-10 h-10 shrink-0`}>
           {isResponding
             && <div className={s.typeingIcon}>
@@ -242,9 +243,9 @@ const Answer: FC<IAnswerProps> = ({
             </div>
           }
         </div>
-        <div className={`${s.answerWrap}`}>
-          <div className={`${s.answer} relative text-sm text-gray-900`}>
-            <div className={`ml-2 py-3 px-4 bg-gray-100 rounded-tr-2xl rounded-b-2xl ${workflowProcess && 'min-w-[480px]'}`}>
+        <div className={`${s.answerWrap} ${styles.answerWrap}`}>
+          <div className={`${s.answer} relative text-sm text-gray-900 ${styles.answer}`}>
+            <div className={`ml-2 py-3 px-4 pr-8 bg-gray-100 rounded-tr-2xl rounded-b-2xl ${styles.answerContent} ${workflowProcess && 'min-w-[480px]'}`}>
               {workflowProcess && (
                 <WorkflowProcess data={workflowProcess} hideInfo />
               )}
