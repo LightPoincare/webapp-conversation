@@ -70,10 +70,14 @@
 
 .count {
   /* display: none; */
+  position: relative;
+  z-index: 5;
   padding: 0 2px;
 }
 
 .sendBtn {
+  position: relative;
+  z-index: 5;
   background: url(./icons/send.svg) center center no-repeat;
 }
 
@@ -146,4 +150,19 @@
 .answer :global(table td) {
   padding: 6px 10px;
   border: 1px solid #d1d5db;
+}
+
+/* 增加聊天区域样式 */
+.chatContainer {
+  width: 100%;
+  max-width: 100%;
+  padding-right: 16px;
+  padding-left: 16px;
+}
+
+.chatContent {
+  max-width: 768px;
+  margin: 0 auto;
+  position: relative;
+  /* 确保相对定位 */
 }
