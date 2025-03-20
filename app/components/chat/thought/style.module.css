@@ -2,6 +2,50 @@
   background-color: rgba(255, 255, 255, 0.92);
 }
 
-.wrapHoverEffect:hover{
+.wrapHoverEffect:hover {
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.1);
+}
+
+.thinkingContainer {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.thinkingHeader {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #f9fafb;
+  cursor: pointer;
+  user-select: none;
+}
+
+.thinkingHeader:hover {
+  background-color: #f3f4f6;
+}
+
+.thinkingIcon {
+  margin-right: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.thinkingTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.thinkingContent {
+  padding: 12px;
+  background-color: #f3f4f6;
+  white-space: pre-wrap;
+  font-size: 14px;
+  font-family: monospace;
+  line-height: 1.5;
+  color: #4b5563;
+  max-height: 300px;
+  overflow-y: auto;
 }

@@ -1,6 +1,6 @@
 'use client'
 import type { FC } from 'react'
-import React from 'react'
+import React, { useState, useRef } from 'react'
 import { HandThumbDownIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
 import LoadingAnim from '../loading-anim'
@@ -62,6 +62,52 @@ type IAnswerProps = {
   allToolIcons?: Record<string, string | Emoji>
 }
 
+// 处理<think></think>标签内的内容
+function processThinking(content: string): { hasThinking: boolean; visibleContent: string; thinkingContent: string; isThinkingComplete: boolean } {
+  // 检测是否有完整的<think></think>标签
+  const fullThinkRegex = /<think>([\s\S]*?)<\/think>/;
+  const fullMatch = content.match(fullThinkRegex);
+
+  if (fullMatch) {
+    // 完整标签的情况
+    let thinkingContent = fullMatch[1];
+    // 处理连续多次换行问题
+    thinkingContent = thinkingContent.replace(/\n{3,}/g, '\n\n');
+    const visibleContent = content.replace(fullMatch[0], '');
+    return {
+      hasThinking: true,
+      visibleContent,
+      thinkingContent,
+      isThinkingComplete: true
+    };
+  }
+
+  // 检测是否有未闭合的<think>标签
+  const openThinkRegex = /<think>([\s\S]*)/;
+  const openMatch = content.match(openThinkRegex);
+
+  if (openMatch) {
+    // 未闭合标签的情况，正在流式输出思考内容
+    let thinkingContent = openMatch[1];
+    // 处理连续多次换行问题
+    thinkingContent = thinkingContent.replace(/\n{3,}/g, '\n\n');
+    const visibleContent = content.replace(openMatch[0], '');
+    return {
+      hasThinking: true,
+      visibleContent,
+      thinkingContent,
+      isThinkingComplete: false
+    };
+  }
+
+  return {
+    hasThinking: false,
+    visibleContent: content,
+    thinkingContent: '',
+    isThinkingComplete: true
+  };
+}
+
 // The component needs to maintain its own state to control whether to display input component
 const Answer: FC<IAnswerProps> = ({
   item,
@@ -72,6 +118,31 @@ const Answer: FC<IAnswerProps> = ({
 }) => {
   const { id, content, feedback, agent_thoughts, workflowProcess } = item
   const isAgentMode = !!agent_thoughts && agent_thoughts.length > 0
+  const [showThinking, setShowThinking] = useState(false);
+  const thinkingContentRef = useRef<HTMLDivElement>(null);
+
+  // 处理思维内容，判断是否包含<think></think>标签
+  const { hasThinking, visibleContent, thinkingContent, isThinkingComplete } = content ? processThinking(content) : { hasThinking: false, visibleContent: '', thinkingContent: '', isThinkingComplete: true };
+
+  // 根据思考内容流式输出状态控制展开/折叠
+  React.useEffect(() => {
+    if (hasThinking) {
+      if (!isThinkingComplete && isResponding) {
+        // 如果正在输出思考内容，则展开
+        setShowThinking(true);
+      } else if (isThinkingComplete && !isResponding) {
+        // 如果思考内容输出完毕，则折叠
+        setShowThinking(false);
+      }
+    }
+  }, [hasThinking, isThinkingComplete, isResponding]);
+
+  // 自动滚动到底部
+  React.useEffect(() => {
+    if (showThinking && thinkingContentRef.current && !isThinkingComplete) {
+      thinkingContentRef.current.scrollTop = thinkingContentRef.current.scrollHeight;
+    }
+  }, [thinkingContent, showThinking, isThinkingComplete]);
 
   const { t } = useTranslation()
 
@@ -145,7 +216,11 @@ const Answer: FC<IAnswerProps> = ({
       {agent_thoughts?.map((item, index) => (
         <div key={index}>
           {item.thought && (
-            <Markdown content={item.thought} />
+            <Thought
+              thought={item}
+              allToolIcons={allToolIcons || {}}
+              isFinished={!!item.observation || !isResponding}
+            />
           )}
           {/* {item.tool} */}
           {/* perhaps not use tool */}
@@ -190,7 +265,28 @@ const Answer: FC<IAnswerProps> = ({
                 : (isAgentMode
                   ? agentModeAnswer
                   : (
-                    <Markdown content={content} />
+                    <>
+                      {hasThinking && (
+                        <div className={s.thinkingContainer}>
+                          <div
+                            className={s.thinkingHeader}
+                            onClick={() => setShowThinking(!showThinking)}
+                          >
+                            <span className={s.thinkingIcon}>
+                              {showThinking ? '▼' : '►'}
+                            </span>
+                            <span className={s.thinkingTitle}>深度思考</span>
+                          </div>
+
+                          {showThinking && (
+                            <div className={s.thinkingContent} ref={thinkingContentRef}>
+                              <Markdown content={thinkingContent} />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <Markdown content={visibleContent} />
+                    </>
                   ))}
             </div>
             <div className='absolute top-[-14px] right-[-14px] flex flex-row justify-end gap-1'>
