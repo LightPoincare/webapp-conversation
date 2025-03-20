@@ -1,6 +1,6 @@
 'use client'
 import type { FC } from 'react'
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { HandThumbDownIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
 import LoadingAnim from '../loading-anim'
@@ -119,7 +119,6 @@ const Answer: FC<IAnswerProps> = ({
   const { id, content, feedback, agent_thoughts, workflowProcess } = item
   const isAgentMode = !!agent_thoughts && agent_thoughts.length > 0
   const [showThinking, setShowThinking] = useState(false);
-  const thinkingContentRef = useRef<HTMLDivElement>(null);
 
   // 处理思维内容，判断是否包含<think></think>标签
   const { hasThinking, visibleContent, thinkingContent, isThinkingComplete } = content ? processThinking(content) : { hasThinking: false, visibleContent: '', thinkingContent: '', isThinkingComplete: true };
@@ -136,13 +135,6 @@ const Answer: FC<IAnswerProps> = ({
       }
     }
   }, [hasThinking, isThinkingComplete, isResponding]);
-
-  // 自动滚动到底部
-  React.useEffect(() => {
-    if (showThinking && thinkingContentRef.current && !isThinkingComplete) {
-      thinkingContentRef.current.scrollTop = thinkingContentRef.current.scrollHeight;
-    }
-  }, [thinkingContent, showThinking, isThinkingComplete]);
 
   const { t } = useTranslation()
 
@@ -279,7 +271,7 @@ const Answer: FC<IAnswerProps> = ({
                           </div>
 
                           {showThinking && (
-                            <div className={s.thinkingContent} ref={thinkingContentRef}>
+                            <div className={s.thinkingContent}>
                               <Markdown content={thinkingContent} />
                             </div>
                           )}

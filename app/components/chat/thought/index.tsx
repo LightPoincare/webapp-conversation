@@ -1,6 +1,6 @@
 'use client'
 import type { FC } from 'react'
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import type { ThoughtItem, ToolInfoInThought } from '../type'
 import Tool from './tool'
 import type { Emoji } from '@/types/tools'
@@ -80,7 +80,6 @@ const Thought: FC<IThoughtProps> = ({
   isFinished,
 }) => {
   const [showThinking, setShowThinking] = useState(false);
-  const thinkingContentRef = useRef<HTMLDivElement>(null);
 
   const [toolNames, isValueArray]: [string[], boolean] = (() => {
     try {
@@ -119,13 +118,6 @@ const Thought: FC<IThoughtProps> = ({
     }
   }, [hasThinking, isThinkingComplete, isFinished]);
 
-  // 自动滚动到底部
-  useEffect(() => {
-    if (showThinking && thinkingContentRef.current && !isThinkingComplete) {
-      thinkingContentRef.current.scrollTop = thinkingContentRef.current.scrollHeight;
-    }
-  }, [thinkingContent, showThinking, isThinkingComplete]);
-
   return (
     <div className='my-2 space-y-2'>
       {hasThinking && (
@@ -141,7 +133,7 @@ const Thought: FC<IThoughtProps> = ({
           </div>
 
           {showThinking && (
-            <div className={s.thinkingContent} ref={thinkingContentRef}>
+            <div className={s.thinkingContent}>
               {thinkingContent}
             </div>
           )}
