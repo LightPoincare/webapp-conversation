@@ -8,13 +8,16 @@ import s from './style.module.css'
 import Answer from './answer'
 import Question from './question'
 import type { FeedbackFunc } from './type'
-import type { ChatItem, VisionFile, VisionSettings } from '@/types/app'
+import type { ChatItem, VisionFile, VisionSettings, FileType } from '@/types/app'
 import { TransferMethod } from '@/types/app'
 import Tooltip from '@/app/components/base/tooltip'
 import Toast from '@/app/components/base/toast'
 import ChatImageUploader from '@/app/components/base/image-uploader/chat-image-uploader'
 import ImageList from '@/app/components/base/image-uploader/image-list'
 import { useImageFiles } from '@/app/components/base/image-uploader/hooks'
+import FileUploader from '../base/file-uploader/file-uploader'
+import FileList from '../base/file-uploader/file-list'
+import { useFileUpload } from '../base/file-uploader/hooks'
 
 export type IChatProps = {
   chatList: ChatItem[]
@@ -28,7 +31,7 @@ export type IChatProps = {
   isHideSendInput?: boolean
   onFeedback?: FeedbackFunc
   checkCanSend?: () => boolean
-  onSend?: (message: string, files: VisionFile[]) => void
+  onSend?: (message: string, files: VisionFile[], attachments: FileType[]) => void
   useCurrentUserAvatar?: boolean
   isResponding?: boolean
   controlClearQuery?: number
@@ -83,18 +86,32 @@ const Chat: FC<IChatProps> = ({
     onClear,
   } = useImageFiles()
 
+  const {
+    files: attachments,
+    onUpload: onAttachmentUpload,
+    onRemove: onAttachmentRemove,
+    onReUpload: onAttachmentReUpload,
+    onClear: onAttachmentsClear,
+  } = useFileUpload()
+
   const handleSend = () => {
     if (!valid() || (checkCanSend && !checkCanSend()))
       return
-    onSend(query, files.filter(file => file.progress !== -1).map(fileItem => ({
-      type: 'image',
-      transfer_method: fileItem.type,
-      url: fileItem.url,
-      upload_file_id: fileItem.fileId,
-    })))
+    onSend(
+      query,
+      files.filter(file => file.progress !== -1).map(fileItem => ({
+        type: 'image',
+        transfer_method: fileItem.type,
+        url: fileItem.url,
+        upload_file_id: fileItem.fileId,
+      })),
+      attachments.filter(file => file.progress === 100) // 只发送已上传完成的文件
+    )
     if (!files.find(item => item.type === TransferMethod.local_file && !item.fileId)) {
       if (files.length)
         onClear()
+      if (attachments.length)
+        onAttachmentsClear()
       if (!isResponding)
         setQuery('')
     }
@@ -147,33 +164,55 @@ const Chat: FC<IChatProps> = ({
         !isHideSendInput && (
           <div className={cn(!feedbackDisabled && '!left-3.5 !right-3.5', 'absolute z-10 bottom-0 left-0 right-0')}>
             <div className={cn('p-[5.5px] max-h-[150px] bg-white border-[1.5px] border-gray-200 rounded-xl overflow-y-auto relative', s.chatContent)}>
-              {
-                visionConfig?.enabled && (
+              <div className='absolute bottom-2 left-2 flex items-center'>
+                {/* 图片上传 */}
+                {visionConfig?.enabled && (
                   <>
-                    <div className='absolute bottom-2 left-2 flex items-center'>
-                      <ChatImageUploader
-                        settings={visionConfig}
-                        onUpload={onUpload}
-                        disabled={files.length >= visionConfig.number_limits}
-                      />
-                      <div className='mx-1 w-[1px] h-4 bg-black/5' />
-                    </div>
-                    <div className='pl-[52px]'>
-                      <ImageList
-                        list={files}
-                        onRemove={onRemove}
-                        onReUpload={onReUpload}
-                        onImageLinkLoadSuccess={onImageLinkLoadSuccess}
-                        onImageLinkLoadError={onImageLinkLoadError}
-                      />
-                    </div>
+                    <ChatImageUploader
+                      settings={visionConfig}
+                      onUpload={onUpload}
+                      disabled={files.length >= visionConfig.number_limits}
+                    />
+                    <div className='mx-1 w-[1px] h-4 bg-black/5' />
                   </>
-                )
-              }
+                )}
+
+                {/* 文件上传 */}
+                <FileUploader
+                  onUpload={onAttachmentUpload}
+                  disabled={isResponding}
+                  maxSize={25} // 设置最大上传大小，单位MB
+                />
+              </div>
+
+              {/* 文件列表显示 */}
+              {attachments.length > 0 && (
+                <div className='mt-2 mb-1 ml-10'>
+                  <FileList
+                    files={attachments}
+                    onRemove={onAttachmentRemove}
+                    onReUpload={onAttachmentReUpload}
+                  />
+                </div>
+              )}
+
+              {/* 图片列表显示 */}
+              {visionConfig?.enabled && files.length > 0 && (
+                <div className='pl-[52px]'>
+                  <ImageList
+                    list={files}
+                    onRemove={onRemove}
+                    onReUpload={onReUpload}
+                    onImageLinkLoadSuccess={onImageLinkLoadSuccess}
+                    onImageLinkLoadError={onImageLinkLoadError}
+                  />
+                </div>
+              )}
+
               <Textarea
                 className={`
                   block w-full px-2 py-[7px] leading-5 max-h-none text-sm text-gray-700 outline-none appearance-none resize-none
-                  ${visionConfig?.enabled && 'pl-12'} pr-24
+                  ${(visionConfig?.enabled || true) && 'pl-12'} pr-24
                 `}
                 value={query}
                 onChange={handleContentChange}

@@ -220,3 +220,18 @@ export enum CodeLanguage {
   javascript = 'javascript',
   json = 'json',
 }
+
+export interface FileType {
+  id: string
+  name: string
+  size: number
+  type: string
+  extension: string
+  url: string
+  upload_time: string
+  fileId?: string
+  progress?: number
+  _id: string
+  deleted?: boolean
+  file?: File
+}

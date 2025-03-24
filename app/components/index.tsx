@@ -11,7 +11,7 @@ import Sidebar from '@/app/components/sidebar'
 import ConfigSence from '@/app/components/config-scence'
 import Header from '@/app/components/header'
 import { fetchAppParams, fetchChatList, fetchConversations, generationConversationName, sendChatMessage, updateFeedback } from '@/service'
-import type { ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
+import type { ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings, FileType } from '@/types/app'
 import { Resolution, TransferMethod, WorkflowRunningStatus } from '@/types/app'
 import Chat from '@/app/components/chat'
 import { setLocaleOnClient } from '@/i18n/client'
@@ -326,7 +326,7 @@ const Main: FC<IMainProps> = () => {
     setChatList(newListWithAnswer)
   }
 
-  const handleSend = async (message: string, files?: VisionFile[]) => {
+  const handleSend = async (message: string, files?: VisionFile[], attachments?: FileType[]) => {
     if (isResponding) {
       notify({ type: 'info', message: t('app.errorMessage.waitForResponse') })
       return
@@ -337,6 +337,7 @@ const Main: FC<IMainProps> = () => {
       conversation_id: isNewConversation ? null : currConversationId,
     }
 
+    // 处理图片文件
     if (visionConfig?.enabled && files && files?.length > 0) {
       data.files = files.map((item) => {
         if (item.transfer_method === TransferMethod.local_file) {
@@ -349,6 +350,17 @@ const Main: FC<IMainProps> = () => {
       })
     }
 
+    // 处理文件附件
+    if (attachments && attachments.length > 0) {
+      data.attachments = attachments.map(item => ({
+        id: item.id,
+        name: item.name,
+        type: item.type,
+        extension: item.extension,
+        size: item.size,
+      }))
+    }
+
     // question
     const questionId = `question-${Date.now()}`
     const questionItem = {
@@ -356,6 +368,7 @@ const Main: FC<IMainProps> = () => {
       content: message,
       isAnswer: false,
       message_files: files,
+      attachments: attachments,
     }
 
     const placeholderAnswerId = `answer-placeholder-${Date.now()}`

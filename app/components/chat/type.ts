@@ -1,4 +1,4 @@
-import type { VisionFile } from '@/types/app'
+import type { VisionFile, FileType } from '@/types/app'
 
 export type LogAnnotation = {
   content: string
@@ -101,6 +101,8 @@ export type IChatItem = {
   log?: { role: string; text: string }[]
   agent_thoughts?: ThoughtItem[]
   message_files?: VisionFile[]
+  attachments?: FileType[]
+  fileType?: FileType
 }
 
 export type MessageEnd = {
